@@ -1,14 +1,36 @@
+import threading
+import time
+
 from app.pubsub.__interface import Publisher
 
 from app.service.chat import Chat
 from app.service.workspace import Workspace
+from app.utility import synchronized
 
 class WorkspacePublisher(Publisher):
     def __init__(self, topic_id, event_types) -> None:
         self.topic_id = topic_id
         self.event_types = event_types
-        
+    
     def start(self):
+        # create another thread that calls make_connections every 3 hours
+        self.make_connections()
+
+        # 3 hours
+        MAX_TTL = 3 * 60 * 60
+        def keep_renew():
+            try:
+                while True:
+                    time.sleep(MAX_TTL)
+                    self.make_connections()
+            except KeyboardInterrupt:
+                print('Exiting...')
+
+        worker_thread = threading.Thread(target=keep_renew)
+        worker_thread.start()
+    
+    @synchronized
+    def make_connections(self):
         self.space_subscription_map = {}
 
         joined_spaces: list = Chat().list_joined_spaces()
@@ -24,10 +46,12 @@ class WorkspacePublisher(Publisher):
             subscription_name = Workspace().listen(space_id, self.event_types, self.topic_id)
             self.space_subscription_map[space_id] = subscription_name
 
+    @synchronized
     def added_to_space(self, space_id):
         subscription_name = Workspace().listen(space_id, self.event_types, self.topic_id)
         self.space_subscription_map[space_id] = subscription_name
 
+    @synchronized
     def removed_from_space(self, space_id):
         subscription_name = self.space_subscription_map[space_id]
         Workspace().unlisten(subscription_name)

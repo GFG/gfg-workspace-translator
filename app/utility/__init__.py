@@ -11,14 +11,21 @@ class SingletonMeta(type):
             cls._instances[cls] = super(SingletonMeta, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 
+class GlobalLock(metaclass=SingletonMeta):
+    def __init__(self):
+        self.lock = threading.Lock()
+
+    def __enter__(self):
+        self.lock.acquire()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.lock.release()
+
 def synchronized(func):
-    lock = threading.Lock()  # Lock object to synchronize access
-    
     @wraps(func)
     def wrapper(*args, **kwargs):
-        with lock:
+        with GlobalLock():
             return func(*args, **kwargs)
-    
     return wrapper
 
 def extract_text(a, b):
