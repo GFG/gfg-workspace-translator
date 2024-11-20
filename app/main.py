@@ -10,7 +10,6 @@ from app.utility import synchronized
 
 @synchronized
 def callback(message, handler: EventHandler):
-    print(message)
     try:
         message_data = message.data.decode("utf-8")
         event = json.loads(message_data)
@@ -20,6 +19,7 @@ def callback(message, handler: EventHandler):
 
     message.ack()
     try:
+        print(event)
         handler.handle_event(event)
     except Exception as e:
         print(f'Error: {e}')
