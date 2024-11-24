@@ -16,8 +16,7 @@ class WorkspacePublisher(Publisher):
         # create another thread that calls make_connections every 3 hours
         self.make_connections()
 
-        # 3 hours
-        MAX_TTL = 3 * 60 * 60
+        MAX_TTL = 3 * 60 * 60 # 3 hours
         def keep_renew():
             try:
                 while True:
@@ -25,6 +24,9 @@ class WorkspacePublisher(Publisher):
                     self.make_connections()
             except KeyboardInterrupt:
                 print('Exiting...')
+            except Exception as e:
+                print('Error:', e)
+                keep_renew()
 
         worker_thread = threading.Thread(target=keep_renew)
         worker_thread.start()
