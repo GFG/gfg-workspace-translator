@@ -29,7 +29,6 @@ class CloseTranslator(Translator):
                 context=context,
                 text=text
             )
-            print(prompt)
             response = model(prompt)
             return response.content
         return translate

@@ -68,7 +68,6 @@ class Chat(Service):
                 pageToken=response['nextPageToken']
             ).execute()
             messages += response.get('messages', [])
-        print(messages)
         if k is not None and len(messages) > k:
             messages = messages[-k:]
         return messages

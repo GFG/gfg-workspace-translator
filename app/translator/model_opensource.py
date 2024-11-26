@@ -68,8 +68,15 @@ class OpenTranslator(Translator):
 if __name__ == "__main__":
     translator = OpenTranslator()
     
-    text = "Xin chào, tôi là một con hải cẩu."
-    print(text)
+    message = Message({
+        'text': "Xin chào, tôi là một con hải cẩu.",
+        'sender': {
+            'name': 'users/1234567890'
+        },
+        'space': {
+            'name': 'spaces/0987654321'
+        }
+    })
 
-    translated = translator.translate(text)
+    translated = translator.translate(message)
     print(translated)
