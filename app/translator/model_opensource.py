@@ -6,6 +6,7 @@ from app.translator.__interface import Translator
 
 from app.config import *
 from app.utility import extract_text, unique_string
+from app.entity.message import Message
 
 def get_device():
     import torch
@@ -35,8 +36,12 @@ class OpenTranslator(Translator):
                 model=name,
                 device=get_device()
             ), template
+        
+    def support_context(self) -> bool:
+        return False
 
-    def translate(self, text: str, src: str=DEFAULT['source'], dst: str=DEFAULT['target']) -> str:
+    def translate(self, message: Message, conversation: list[Message] = None, src: str=DEFAULT['source'], dst: str=DEFAULT['target']) -> str:
+        text = message.text()
         if not Translator.need_translation(text, src, dst):
             return text
         translator, template = self.get_model(src, dst)
@@ -52,7 +57,7 @@ class OpenTranslator(Translator):
             results.append(self._decode(result, template, language=dst))
         return '\n'.join(results)
     
-    def _encode(self, text: str, template: str, language: str=DEFAULT['source']) -> str:
+    def _encode(self, text: str, context: str, template: str, language: str=DEFAULT['source']) -> str:
         return template.format(language=language, text=text)
     
     def _decode(self, text: str, template: str, language: str=DEFAULT['target']) -> str:

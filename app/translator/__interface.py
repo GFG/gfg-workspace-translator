@@ -1,9 +1,13 @@
 from .language_detector import LanguageDetector
 
-from app.config import SUPPORTED_LANGUAGES
+from app.config import SUPPORTED_LANGUAGES, DEFAULT
+from app.entity.message import Message
 
 class Translator:
-    def translate(text: str, src: str='vi', dst: str='en') -> str:
+    def translate(self, message: Message, conversation: list[Message] = None, src: str=DEFAULT['source'], dst: str=DEFAULT['target']) -> str:
+        raise NotImplementedError
+    
+    def support_context(self) -> bool:
         raise NotImplementedError
     
     @staticmethod
@@ -12,6 +16,10 @@ class Translator:
             raise ValueError("Unsupported language")
         if src == dst:
             return False
+        if text == "":
+            return False
         if LanguageDetector().detect(text) == dst:
             return False
         return True
+    
+    

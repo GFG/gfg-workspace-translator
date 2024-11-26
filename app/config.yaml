@@ -40,6 +40,9 @@ CLOSE_MODELS:
       - The text can have special formatting, emojis, attachment, etc., so try to preserve them as much as possible.
       - So do NOT translate names, id, tags, or anything that is not a regular text according to Google message structure.
       - Answer with only the translated text and nothing else.
+
+      Context:
+      {context}
       
       User:
       Translate from {src} to {dst}:

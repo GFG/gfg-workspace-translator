@@ -3,6 +3,7 @@ from app.pubsub.publisher import Publisher
 from app.pubsub.subscriber_pull import Subscriber
 
 from app.service.chat import Chat
+from app.entity.message import Message
 
 class EventHandler:
     def __init__(self, translator: Translator, publisher: Publisher, subscriber: Subscriber) -> None:
@@ -24,14 +25,21 @@ class EventHandler:
                 print(f'Unknown event type: {event}')
 
     def handle_message(self, event):
-        if event['message']['sender']['type'] != 'HUMAN':
+        message = Message(event.get('message', {}))
+        if not message.is_human():
             return
-        message = event.get('message', {})
-        text = message.get('formattedText') or message.get('argumentText') or message.get('text')
+        text = message.text()
         if not text:
             return
         print(f'Received message: {event}')
-        translated = self.translator.translate(text)
+        if self.translator.support_context() and message.is_threaded():
+            space_id = message.space_id()
+            thread_id = message.thread_id()
+            conversation = Chat().list_messages(space_id, thread_id)
+            conversation = [Message(msg) for msg in conversation if Message(msg).is_human()]
+        else:
+            conversation = None
+        translated = self.translator.translate(message, conversation)
         if translated == text:
             print(f'No need to translate: {text}')
             return
@@ -51,3 +59,17 @@ class EventHandler:
         space_id = event['space']['name'].split('/')[-1]
         self.publisher.removed_from_space(space_id)
         print(f'Removed from space: {space_id}')
+
+if __name__ == '__main__':
+    from app.translator.model_closesource import CloseTranslator
+    
+    event_handler = EventHandler(CloseTranslator(), None, None)
+    
+    space_id = 'AAAA-Z5PVtc'
+    thread_id = 'mm373X-7j64'
+    messages = Chat().list_messages(space_id=space_id, thread_id=thread_id)
+
+    event_handler.handle_message({
+        'message': messages[2]
+    })
+
